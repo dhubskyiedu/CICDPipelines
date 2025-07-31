@@ -17,6 +17,7 @@ status_emojis = {
     "success": "✅",
     "failure": "❌"
 }
+
 if deps_status == "success" and build_status == "success" and test_status == "success":
     subject = "CI/CD Pipeline Succeeded ✅"
 else:
