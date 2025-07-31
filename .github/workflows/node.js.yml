@@ -20,6 +20,7 @@ jobs:
       with:
         node-version: ${{ matrix.node-version }}
         cache: 'npm'
+        cache-dependency-path: cicdlearn/package-lock.json
         
     - name: Set up Python
       uses: actions/setup-python@v5
