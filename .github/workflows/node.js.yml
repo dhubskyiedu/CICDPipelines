@@ -1,0 +1,55 @@
+name: NextJS project CI/CD pipeline
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [18.x, 20.x, 22.x]
+    steps:
+    
+    - uses: actions/checkout@v4
+    - name: Set up NodeJS ${{ matrix.node-version }}
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ matrix.node-version }}
+        cache: 'npm'
+        
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with: 
+        python-version: '3.11'
+    - name: Install Python dependencies
+      run: pip install -r cicdfunc/email_scripts/requirements.txt
+    
+    - name: Install dependencies
+      id: deps_step
+      working-directory: cicdlearn
+      run: npm ci
+
+    - name: Build the app
+      id: build_step
+      working-directory: cicdlearn
+      run: npm run build
+
+    - name: Test the app
+      id: test_step
+      working-directory: cicdlearn
+      run: npm test
+
+    - name: Send notification email
+      if: always()
+      run: python cicdfunc/email_scripts/send_email.py
+      env:
+        SMTP_USER: ${{ secrets.SMTP_USER }}
+        SMTP_PASS: ${{ secrets.SMTP_PASS }}
+        TO_EMAIL: ${{ secrets.TO_EMAIL }}
+        DEPS_STATUS: ${{ steps.deps_step.outcome }}
+        BUILD_STATUS: ${{ steps.build_step.outcome }}
+        TEST_STATUS: ${{ steps.test_step.outcome }}
